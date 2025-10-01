@@ -1,0 +1,179 @@
+Build a production‑ready full‑stack web app called “NASA Knowledge Explorer” for desktop. Use Next.js 14 (App Router) with TypeScript, Tailwind, shadcn/ui, Prisma ORM with Neon Postgres, and Neon Auth (Stack Auth). Do not use SQLite. Implement a public landing page, authentication (sign up/sign in), a protected dashboard, and protected learning pages that surface the latest NASA media and news. Provide graceful fallbacks when optional environment variables are missing so the demo works immediately.
+
+Architecture and stack
+
+Framework: Next.js 14 App Router, TypeScript, Server Components by default.
+
+Styling: Tailwind CSS, shadcn/ui, Framer Motion for subtle animations with prefers‑reduced‑motion.
+
+ORM/DB: Prisma targeting Postgres; connect to Neon via DATABASE_URL; run migrations programmatically.
+
+Auth: Neon Auth (Stack Auth) for Next.js using the provided keys; session‑based protection for /dashboard and /learn routes.
+
+Caching and rate‑limits: If UPSTASH_REDIS_* present, use Upstash REST for TTL cache and simple IP rate‑limit; otherwise use an in‑memory LRU plus Postgres JSONB cache tables with TTL fields.
+
+Configuration: Read required env vars from process.env; never expose server secrets to the client.
+
+Pages and routes
+
+Public:
+
+/ (landing): sticky nav; hero with Earth backdrop; CTAs “Explore Now 🚀” and “Take a Quiz”; three‑card Highlights (Featured Planet, Upcoming Launch with countdown, Latest News); hub grid (Solar System, Missions, Events, Quizzes, News); credibility band “Powered by NASA Open APIs”; CTA section; footer with newsletter capture.
+
+/auth/sign-in and /auth/sign-up: email/password flows via Neon Auth; strong validation and error states.
+
+Protected:
+
+/dashboard: greeting, today’s APOD tile (image or video), saved bookmarks, recent quizzes widget, and quick links.
+
+/learn: index with topic cards; subpages:
+
+/learn/planets: simple 3D thumbnails, fact cards, image gallery.
+
+/learn/missions: list/timeline with filter chips (ongoing, upcoming, completed).
+
+/learn/news: paginated cards with title, 180–220 char summary, date, and source link.
+
+API routes (server only):
+
+GET /api/apod?date=YYYY‑MM‑DD → Astronomy Picture of the Day; cache 30–60 min.
+
+GET /api/news → latest NASA items; cache 15–30 min.
+
+GET /api/missions?status=ongoing|upcoming|completed → aggregated mission data; cache 30–60 min.
+
+POST /api/bookmarks and DELETE /api/bookmarks/:id → save/remove user bookmarks (auth required).
+
+POST /api/subscribe → store newsletter email with double‑opt‑in placeholder.
+
+NASA provider integration (server‑only; never expose NASA_API_KEY client‑side)
+
+Create /lib/nasa.ts with typed functions:
+
+getAPOD(date?) → calls api.nasa.gov/planetary/apod with key.
+
+getLatestNews(params?) → pulls from the NASA Images and Videos Library search API, normalized to Article type.
+
+getMissions(filter) → serve curated JSON plus external sources; normalize to Mission type.
+
+Implement fetchWithCache wrapper:
+
+10s timeout; two retries with backoff; conditional ETag/Last‑Modified usage when available.
+
+Cache key = url + params; choose Upstash if configured or Postgres JSONB cache with TTL fields; otherwise in‑memory LRU for demo.
+
+Add a short text summarizer utility for news (truncate smartly to 180–220 chars without external LLMs).
+
+Data model (Prisma, Postgres)
+
+User: id uuid, email unique, name, image, createdAt.
+
+Profile: id, userId FK, preferences jsonb (topics, theme, notifications).
+
+Article: id, sourceId, title, summary, url, imageUrl, publishedAt, tags text[].
+
+Bookmark: id, userId FK, articleId FK, createdAt.
+
+QuizProgress: id, userId FK, topic, score int, attempts int, updatedAt.
+
+MissionCache: id, slug, payload jsonb, cachedAt timestamptz.
+
+NewsCache: id, source, payload jsonb, cachedAt timestamptz.
+
+Subscribers: id, email unique, createdAt, verifiedAt null.
+Add indexes on Article.publishedAt desc, Bookmark.userId, NewsCache.source, MissionCache.slug.
+
+Auth and access control
+
+Wire Neon Auth middleware to gate /dashboard and /learn.*; redirect unauthenticated users to /auth/sign-in.
+
+Server actions and API routes must read user session and enforce ownership checks on bookmarks and profile.
+
+Sanitize all inputs with Zod; return typed error payloads.
+
+UI and accessibility
+
+Design tokens: bg #05070D, surface #0D1220, primary #0B3D91, accent #E03C31, text #F5F7FF, success #22C55E, warn #F59E0B.
+
+Components: AppHeader (sticky shrink on scroll), AppFooter, Hero, HighlightsRow, HubGrid, ArticleCard, MissionCard, PlanetCard, Countdown, Badge, NewsletterForm, AuthForm.
+
+Motion: gentle fade/slide reveals; hover lift with shadow; keyboard focus rings; WCAG AA contrast.
+
+Environment and fallbacks
+Create .env with these values provided by the user; treat optional ones as absent and enable fallbacks so the demo runs immediately.
+
+Required for this build now:
+NASA_API_KEY=2BH2BrL0wV3Gd90lJHRzP9AA57VpTXKL1nX3R8wU
+DATABASE_URL=postgresql://neondb_owner:npg_nxFRvo68tsLe@ep-orange-base-a1oxfvwe-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require
+NEXT_PUBLIC_STACK_PROJECT_ID=1de944bf-5169-4775-96a3-dded77024774
+NEXT_PUBLIC_STACK_PUBLISHABLE_CLIENT_KEY=pck_tw95e53f87w2vc7d9ndfbp22zths8xypqkq52sx18amh0
+STACK_SECRET_SERVER_KEY=ssk_5yktdckyr0qwv50c954rkjzsq8e7xdd0mfcazyc58qttr
+CONTACT_EMAIL=bdlking7@gmail.com
+
+Optional (fallback automatically if missing):
+NEXT_PUBLIC_APP_URL=your public URL once deployed
+ENCRYPTION_KEY=32‑byte hex for stable encryption; if absent, generate ephemeral per boot
+UPSTASH_REDIS_REST_URL=
+UPSTASH_REDIS_REST_TOKEN=
+
+Fallback behavior:
+
+If NEXT_PUBLIC_APP_URL is empty, compute absolute links from the request’s host and protocol at runtime.
+
+If ENCRYPTION_KEY is empty, generate a random 32‑byte secret on boot; sessions will reset on restarts (acceptable for demo).
+
+If UPSTASH_* is empty, use Postgres JSONB cache tables or a process LRU cache with short TTLs.
+
+Implementation tasks
+
+Initialize Next.js 14 (App Router), TypeScript, Tailwind, shadcn/ui; strict tsconfig, ESLint, Prettier.
+
+Add Prisma schema above; run prisma generate and prisma migrate deploy; add seed script for a few Articles and Missions.
+
+Create /lib/nasa.ts with typed providers and fetchWithCache; create /lib/cache.ts with Upstash/Postgres/in‑memory strategies.
+
+Build API routes: /api/apod, /api/news, /api/missions, /api/bookmarks, /api/subscribe.
+
+Build pages and components exactly as specified; ensure /dashboard and all /learn routes read server data and are protected.
+
+Add rate‑limit middleware on public API endpoints (e.g., 60 req/5 min/IP) with Upstash if available, else a simple in‑memory token bucket.
+
+Add Playwright smoke tests: open /, click primary CTA, see sections; complete sign‑up, redirect to /dashboard; verify APOD renders.
+
+Add Vitest unit tests for nasa providers (mock fetch) and Zod schemas.
+
+File layout
+
+app/(public)/page.tsx
+
+app/auth/sign-in/page.tsx, app/auth/sign-up/page.tsx
+
+app/dashboard/page.tsx
+
+app/learn/page.tsx, app/learn/news/page.tsx, app/learn/missions/page.tsx, app/learn/planets/page.tsx
+
+app/api/apod/route.ts, app/api/news/route.ts, app/api/missions/route.ts
+
+app/api/bookmarks/route.ts, app/api/bookmarks/[id]/route.ts, app/api/subscribe/route.ts
+
+components/* reusable UI; lib/nasa.ts, lib/cache.ts, lib/auth.ts; prisma/schema.prisma; scripts/seed.ts
+
+Acceptance criteria
+
+Cold start acceptable for demo; lighthouse desktop score ≥ 85 on landing.
+
+Auth flows work; protected pages redirect when unauthenticated.
+
+/learn/news shows at least 6 items with title, summary, date, and source.
+
+/dashboard shows APOD daily (image or video with graceful fallback).
+
+Bookmarks persist in Postgres and are user‑scoped.
+
+No SQLite deps or files.
+
+Documentation deliverables
+
+README with setup steps, env table, run/migrate/seed commands, fallback notes, and a short admin walkthrough.
+
+.env.example containing keys with comments specifying which are required vs optional for demo.

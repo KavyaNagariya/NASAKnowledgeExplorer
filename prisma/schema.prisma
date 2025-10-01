@@ -1,0 +1,106 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String?
+  image     String?
+  createdAt DateTime @default(now())
+
+  profile       Profile?
+  bookmarks     Bookmark[]
+  quizProgress  QuizProgress[]
+
+  @@map("users")
+}
+
+model Profile {
+  id          String  @id @default(uuid())
+  userId      String  @unique
+  preferences Json?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("profiles")
+}
+
+model Article {
+  id          String    @id @default(uuid())
+  sourceId    String    @unique
+  title       String
+  summary     String
+  url         String
+  imageUrl    String?
+  publishedAt DateTime
+  tags        String[]
+  createdAt   DateTime  @default(now())
+
+  bookmarks Bookmark[]
+
+  @@index([publishedAt(sort: Desc)])
+  @@map("articles")
+}
+
+model Bookmark {
+  id        String   @id @default(uuid())
+  userId    String
+  articleId String
+  createdAt DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  article Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, articleId])
+  @@index([userId])
+  @@map("bookmarks")
+}
+
+model QuizProgress {
+  id        String   @id @default(uuid())
+  userId    String
+  topic     String
+  score     Int
+  attempts  Int
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("quiz_progress")
+}
+
+model MissionCache {
+  id       String   @id @default(uuid())
+  slug     String   @unique
+  payload  Json
+  cachedAt DateTime @default(now())
+
+  @@index([slug])
+  @@map("mission_cache")
+}
+
+model NewsCache {
+  id       String   @id @default(uuid())
+  source   String   @unique
+  payload  Json
+  cachedAt DateTime @default(now())
+
+  @@index([source])
+  @@map("news_cache")
+}
+
+model Subscriber {
+  id         String    @id @default(uuid())
+  email      String    @unique
+  createdAt  DateTime  @default(now())
+  verifiedAt DateTime?
+
+  @@map("subscribers")
+}
