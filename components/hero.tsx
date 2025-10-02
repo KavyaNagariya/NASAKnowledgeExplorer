@@ -2,18 +2,22 @@
 
 import Link from 'next/link'
 import { motion } from 'framer-motion'
+import Image from 'next/image'
 
 export function Hero() {
   return (
     <section className="relative min-h-[600px] flex items-center justify-center overflow-hidden">
-      <div
-        className="absolute inset-0 z-0"
-        style={{
-          backgroundImage: 'radial-gradient(circle at 50% 50%, rgba(11, 61, 145, 0.15) 0%, rgba(5, 7, 13, 0.95) 100%), url("https://images.unsplash.com/photo-1446776653964-20c1d3a81b06?w=1920")',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-        }}
-      />
+      <div className="absolute inset-0 z-0">
+        <Image
+          src="https://images.unsplash.com/photo-1446776653964-20c1d3a81b06?w=1920"
+          alt="Space background"
+          fill
+          className="object-cover"
+          priority
+          sizes="100vw"
+          quality={80}
+        />
+      </div>
 
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/50 to-background z-0" />
 

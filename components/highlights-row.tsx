@@ -1,15 +1,46 @@
+'use client'
+
 import { getAPOD, getLatestNews, getMissions } from '@/lib/nasa'
 import { Countdown } from './countdown'
 import Link from 'next/link'
+import Image from 'next/image'
+import { useState, useEffect } from 'react'
+import { SkeletonLoader } from './skeleton-loader'
+import type { APOD, Article, Mission } from '@/lib/types'
 
-export async function HighlightsRow() {
-  const [apod, news, missions] = await Promise.all([
-    getAPOD().catch(() => null),
-    getLatestNews({ pageSize: 3 }).catch(() => []),
-    getMissions('upcoming').catch(() => []),
-  ])
+export function HighlightsRow() {
+  const [data, setData] = useState<{ apod: APOD | null; news: Article[]; missions: Mission[] } | null>(null)
+  const [loading, setLoading] = useState(true)
 
-  const latestNews = news[0]
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [apod, news, missions] = await Promise.all([
+          getAPOD().catch(() => null),
+          getLatestNews({ pageSize: 3 }).catch(() => []),
+          getMissions('upcoming').catch(() => []),
+        ])
+        
+        setData({ apod, news, missions })
+      } catch (error) {
+        console.error('Error fetching data:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchData()
+  }, [])
+
+  if (loading) {
+    return <SkeletonLoader />
+  }
+
+  if (!data) {
+    return <div className="text-center py-8">Failed to load data</div>
+  }
+
+  const { apod, news, missions } = data
   const upcomingMission = missions[0]
 
   return (
@@ -17,10 +48,12 @@ export async function HighlightsRow() {
       <div className="bg-card rounded-xl border border-border overflow-hidden hover:border-primary/50 transition-all hover:shadow-lg hover:shadow-primary/10">
         <div className="aspect-video relative bg-muted">
           {apod?.media_type === 'image' && apod.url && (
-            <img
+            <Image
               src={apod.url}
               alt={apod.title}
-              className="w-full h-full object-cover"
+              fill
+              className="object-cover"
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             />
           )}
         </div>
@@ -60,29 +93,53 @@ export async function HighlightsRow() {
         </div>
       </div>
 
-      <div className="bg-card rounded-xl border border-border overflow-hidden hover:border-primary/50 transition-all hover:shadow-lg hover:shadow-primary/10">
-        {latestNews?.imageUrl && (
-          <div className="aspect-video relative bg-muted">
-            <img
-              src={latestNews.imageUrl}
-              alt={latestNews.title}
-              className="w-full h-full object-cover"
-            />
-          </div>
-        )}
+      {/* News Section - Show multiple news items */}
+      <div className="bg-card rounded-xl border border-border overflow-hidden">
         <div className="p-6">
-          <div className="text-xs font-semibold text-primary mb-2">LATEST NEWS</div>
-          <h3 className="text-xl font-bold mb-2 line-clamp-2">
-            {latestNews?.title || 'Space Discovery'}
-          </h3>
-          <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
-            {latestNews?.summary || 'Read the latest news from NASA'}
-          </p>
+          <div className="text-xs font-semibold text-primary mb-4">LATEST NEWS</div>
+          
+          {/* Show up to 3 news items */}
+          <div className="space-y-4">
+            {news.slice(0, 3).map((article) => (
+              <div key={article.id} className="pb-4 last:pb-0 last:border-0 border-b border-border">
+                {article.imageUrl && (
+                  <div className="aspect-video relative bg-muted rounded-md mb-3">
+                    <Image
+                      src={article.imageUrl}
+                      alt={article.title}
+                      fill
+                      className="object-cover rounded-md"
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    />
+                  </div>
+                )}
+                <h3 className="text-sm font-bold mb-2 line-clamp-2">
+                  {article.title}
+                </h3>
+                <p className="text-xs text-muted-foreground mb-2 line-clamp-2">
+                  {article.summary}
+                </p>
+                <Link
+                  href={article.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs font-medium text-primary hover:underline"
+                >
+                  Read More →
+                </Link>
+              </div>
+            ))}
+          </div>
+          
+          {news.length === 0 && (
+            <p className="text-muted-foreground text-sm">No news available at the moment</p>
+          )}
+          
           <Link
             href="/learn/news"
-            className="text-sm font-medium text-primary hover:underline"
+            className="text-sm font-medium text-primary hover:underline mt-4 inline-block"
           >
-            Read More →
+            View All News →
           </Link>
         </div>
       </div>

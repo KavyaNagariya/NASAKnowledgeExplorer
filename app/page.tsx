@@ -5,6 +5,9 @@ import { Hero } from '@/components/hero'
 import { HighlightsRow } from '@/components/highlights-row'
 import { HubGrid } from '@/components/hub-grid'
 
+export const dynamic = 'force-static' // Enable static rendering for better performance
+export const revalidate = 3600 // Revalidate at most once per hour
+
 export default function HomePage() {
   return (
     <div className="min-h-screen flex flex-col">
