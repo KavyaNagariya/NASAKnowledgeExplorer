@@ -9,7 +9,7 @@ const planets: Planet[] = [
     distanceFromSun: '57.9 million km',
     diameter: '4,879 km',
     moons: 0,
-    imageUrl: 'https://unsplash.com/photos/71W3CWeZF7A/download?force=true&w=800',// mercury
+    imageUrl: 'https://unsplash.com/photos/mercury-on-a-black-background-71W3CWeZF7A',//saturn hai isme mercury laga denge
     facts: ['Shortest orbit: 88 Earth days', 'No atmosphere', 'Temperature extremes: -180°C to 430°C'],
   },
   {
@@ -18,7 +18,7 @@ const planets: Planet[] = [
     distanceFromSun: '108.2 million km',
     diameter: '12,104 km',
     moons: 0,
-    imageUrl: 'https://unsplash.com/photos/88BMUbQHGlQ/download?force=true&w=800',//venus
+    imageUrl: 'https://unsplash.com/photos/venus-on-a-black-background-88BMUbQHGlQ',
     facts: ['Hottest planet: 465°C', 'Rotates backwards', 'Thick CO2 atmosphere'],
   },
   {
@@ -36,7 +36,7 @@ const planets: Planet[] = [
     distanceFromSun: '227.9 million km',
     diameter: '6,779 km',
     moons: 2,
-    imageUrl: 'https://images.unsplash.com/photo-1614728894747-a83421e2b9c9?w=800',
+    imageUrl: 'https://images.unsplash.com/photo-1614728894747-a83421e2b9c9?w=800',//neptune hai aur neptune me broken image hai correct image-https://images.unsplash.com/photo-1614728894747-a83421e2b9c9?w=800
     facts: ['Home to Olympus Mons, largest volcano', 'Evidence of ancient water', 'Day length: 24.6 hours'],
   },
   {
@@ -45,7 +45,7 @@ const planets: Planet[] = [
     distanceFromSun: '778.5 million km',
     diameter: '139,820 km',
     moons: 95,
-    imageUrl: 'https://unsplash.com/photos/awYEQyYdHVE/download?force=true&w=800',//jupiter image find  https://unsplash.com/photos/awYEQyYdHVE/download?force=true&w=800
+    imageUrl: 'https://unsplash.com/photos/a-close-up-of-a-planet-with-a-black-background-awYEQyYdHVE',
     facts: ['Largest planet in solar system', 'Great Red Spot storm', 'Strongest magnetic field'],
   },
   {
@@ -54,7 +54,7 @@ const planets: Planet[] = [
     distanceFromSun: '1.4 billion km',
     diameter: '116,460 km',
     moons: 146,
-    imageUrl: 'https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=800',
+    imageUrl: 'https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=800',//corrected
     facts: ['Most extensive ring system', 'Least dense planet', 'Could float in water'],
   },
   {
@@ -72,7 +72,7 @@ const planets: Planet[] = [
     distanceFromSun: '4.5 billion km',
     diameter: '49,244 km',
     moons: 14,
-    imageUrl: 'https://images.unsplash.com/photo-1614313913007-2b4ae8ce32d6?w=800',
+    imageUrl: 'https://images.unsplash.com/photo-1614313913007-2b4ae8ce32d6?w=800',//corrected
     facts: ['Fastest winds: 2,100 km/h', 'Furthest planet from Sun', 'Takes 165 years to orbit Sun'],
   },
 ]
