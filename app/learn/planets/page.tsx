@@ -63,7 +63,7 @@ const planets: Planet[] = [
     distanceFromSun: '2.9 billion km',
     diameter: '50,724 km',
     moons: 27,
-    imageUrl: 'https://images.unsplash.com/photo-1614732484003-ef9881555dc3?w=800',//uranus kijagah mars hai correctimage- https://images.unsplash.com/photo-1614732484003-ef9881555dc3?w=800
+    imageUrl: 'https://images.unsplash.com/photo-1614732484003-ef9881555dc3?w=800',
     facts: ['Rotates on its side', 'Coldest atmosphere: -224°C', 'Methane gives blue color'],
   },
   {
