@@ -7,14 +7,15 @@ interface CacheEntry<T> {
 
 class MemoryCache {
   private cache = new Map<string, CacheEntry<any>>()
-  private maxSize = 100
+  private maxSize = 200 // Increased cache size
 
   async get<T>(key: string): Promise<T | null> {
     const entry = this.cache.get(key)
     if (!entry) return null
     
     const now = Date.now()
-    if (now - entry.timestamp > 30 * 60 * 1000) {
+    // Extended cache time to 1 hour for better performance
+    if (now - entry.timestamp > 60 * 60 * 1000) {
       this.cache.delete(key)
       return null
     }
@@ -23,9 +24,15 @@ class MemoryCache {
   }
 
   async set<T>(key: string, data: T, ttlSeconds: number): Promise<void> {
+    // Increased cache size before eviction
     if (this.cache.size >= this.maxSize) {
-      const firstKey = this.cache.keys().next().value
-      if (firstKey) this.cache.delete(firstKey)
+      // More efficient cache eviction - remove oldest entries
+      const keys = Array.from(this.cache.keys())
+      const entriesToRemove = Math.max(1, Math.floor(this.maxSize * 0.1)) // Remove 10% of entries
+      
+      for (let i = 0; i < entriesToRemove; i++) {
+        this.cache.delete(keys[i])
+      }
     }
     
     this.cache.set(key, {
@@ -69,7 +76,8 @@ export class CacheService {
       const now = Date.now()
       const cacheAge = now - cached.cachedAt.getTime()
       
-      if (cacheAge > 30 * 60 * 1000) {
+      // Extended cache time to 1 hour for better performance
+      if (cacheAge > 60 * 60 * 1000) {
         await prisma.newsCache.delete({ where: { id: cached.id } })
         return null
       }
@@ -81,7 +89,7 @@ export class CacheService {
     }
   }
 
-  async set<T>(key: string, data: T, ttlSeconds: number = 1800): Promise<void> {
+  async set<T>(key: string, data: T, ttlSeconds: number = 3600): Promise<void> { // Default to 1 hour
     if (this.useUpstash) {
       return
     }
@@ -133,7 +141,8 @@ export class CacheService {
       const now = Date.now()
       const cacheAge = now - cached.cachedAt.getTime()
       
-      if (cacheAge > 60 * 60 * 1000) {
+      // Extended cache time to 6 hours for better performance
+      if (cacheAge > 6 * 60 * 60 * 1000) {
         await prisma.missionCache.delete({ where: { id: cached.id } })
         return null
       }
@@ -145,7 +154,7 @@ export class CacheService {
     }
   }
 
-  async setMissionCache<T>(slug: string, data: T): Promise<void> {
+  async setMissionCache<T>(slug: string, data: T, ttlSeconds: number = 21600): Promise<void> { // Default to 6 hours
     try {
       await prisma.missionCache.upsert({
         where: { slug },
@@ -169,6 +178,7 @@ export const cache = new CacheService()
 
 class RateLimiter {
   private requests = new Map<string, number[]>()
+  private maxSize = 5000 // Limit memory usage
 
   async checkLimit(ip: string, maxRequests: number = 60, windowSeconds: number = 300): Promise<boolean> {
     const now = Date.now()
@@ -184,7 +194,8 @@ class RateLimiter {
     recentRequests.push(now)
     this.requests.set(ip, recentRequests)
     
-    if (this.requests.size > 10000) {
+    // Limit memory usage
+    if (this.requests.size > this.maxSize) {
       const oldestKey = this.requests.keys().next().value
       if (oldestKey) this.requests.delete(oldestKey)
     }

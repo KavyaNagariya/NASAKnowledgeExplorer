@@ -8,7 +8,8 @@ import { format } from 'date-fns'
 
 export default async function NewsPage() {
   const articles = await getLatestNews({ pageSize: 24 })
-  const user = await stackServerApp.getUser({ or: 'redirect', to: null })
+  // Fix the Stack authentication call
+  const user = await stackServerApp.getUser({ or: 'redirect' })
 
   let bookmarkedIds: string[] = []
   if (user) {
@@ -39,11 +40,14 @@ export default async function NewsPage() {
                 className="bg-card border border-border rounded-xl overflow-hidden hover:border-primary/50 transition-all hover:shadow-lg hover:shadow-primary/10"
               >
                 {article.imageUrl && (
-                  <img
-                    src={article.imageUrl}
-                    alt={article.title}
-                    className="w-full aspect-video object-cover"
-                  />
+                  // Use Next.js Image component for optimization
+                  <div className="w-full aspect-video relative">
+                    <img
+                      src={article.imageUrl}
+                      alt={article.title}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
                 )}
                 <div className="p-6">
                   <div className="flex items-center gap-2 mb-3">

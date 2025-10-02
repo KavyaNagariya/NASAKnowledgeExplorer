@@ -75,8 +75,12 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Bookmark creation error:', error)
     if (error instanceof z.ZodError) {
+      // Fix the Zod error issue by properly accessing the error details
       return NextResponse.json(
-        { error: 'Invalid request data', details: error.errors },
+        { 
+          error: 'Invalid request data', 
+          details: error.issues // ZodError has an 'issues' property, not 'errors'
+        },
         { status: 400 }
       )
     }

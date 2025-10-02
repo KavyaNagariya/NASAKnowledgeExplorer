@@ -11,7 +11,7 @@ async function fetchWithRetry(
   options: RequestInit = {},
   retries: number = 2
 ): Promise<Response> {
-  const timeout = 10000
+  const timeout = 8000 // Reduced timeout for better responsiveness
   
   for (let i = 0; i <= retries; i++) {
     try {
@@ -71,7 +71,8 @@ export async function getAPOD(date?: string): Promise<APOD> {
     const response = await fetchWithRetry(url)
     const data: APOD = await response.json()
     
-    await cache.set(cacheKey, data, 3600)
+    // Extended cache time for better performance (2 hours)
+    await cache.set(cacheKey, data, 7200)
     
     return data
   } catch (error) {
@@ -125,7 +126,8 @@ export async function getLatestNews(params?: {
         }
       })
     
-    await cache.set(cacheKey, articles, 1800)
+    // Extended cache time for better performance (1 hour)
+    await cache.set(cacheKey, articles, 3600)
     
     return articles
   } catch (error) {
@@ -232,7 +234,8 @@ export async function getMissions(filter?: 'ongoing' | 'upcoming' | 'completed')
     missions = allMissions.filter(m => m.status === filter)
   }
   
-  await cache.setMissionCache(cacheKey, missions)
+  // Extended cache time for better performance (6 hours)
+  await cache.setMissionCache(cacheKey, missions, 21600)
   
   return missions
 }
